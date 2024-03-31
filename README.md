@@ -3,10 +3,11 @@ This open-source project demonstrates Retrieval Augmented Generation (RAG) using
 
 ## Overview
 **siosio-rag** uses the following technologies:
-* **Orchestration:** LangChain
-* **Embedding Vectorstore:** Weaviate
-* **Text Embeddings:** FlagEmbedding
+* **Orchestration:** LangChain.
+* **Embedding Vectorstore:** Weaviate.
+* **Text Embeddings:** FlagEmbedding.
 * **LLMs:** OpenAI ChatGPT and Google Gemini.
+* **Evaluation:** Ragas.
 
 ## Getting Started
 
@@ -32,7 +33,7 @@ pip install -r requirements.txt
 
 ## Usage
 
-### 1. Prepare Data
+### Prepare Data
 Run `prepare_data.py` to preprocess and save the data:
 
 ```bash
@@ -41,7 +42,7 @@ python prepare_data.py --out_path target_directory_path
 
 **Note:** Replace `target_directory_path` with the desired directory for storing the processed data.
 
-### 2. Build Index for Retrieval
+### Build Index for Retrieval
 Run `build_index.py` to convert data into embeddings and build an index:
 
 ```bash
@@ -53,7 +54,7 @@ python build_index.py --input_path data_directory_path --out_path target_directo
 * Replace `target_directory_path` with the desired directory for storing the index.
 * Replace `name_for_index` with a chosen name for your index.
 
-### 3. Perform RAG
+### Perform RAG
 Run `rag.py` to execute RAG:
 
 ```bash
@@ -71,6 +72,21 @@ python rag.py \
 * Replace `llm_model_name` with the desired LLM model (e.g., "gpt-3.5-turbo" or "gemini-1.0-pro-001").
 * Replace `api_key_for_llm` with your API key for the chosen LLM.
 * Replace `query_text` with your desired query for the RAG process.
+
+### Evaluation (Optional)
+Run `evaluate.py` to evaluate the RAG results:
+
+```bash
+python evaluate.py \
+    --input_path result_csv_path \
+    --output_path target_directory_path \
+    --api_key api_key_for_llm
+```
+
+**Note:**
+* Replace `result_csv_path` with the path of the result csv file.
+* Replace `target_directory_path` with the desired directory for saving the evaluation result.
+* Replace `api_key_for_llm` with your API key for OpenAI.
 
 ## License
 This project is licensed under the Apache-2.0 license. Please refer to the LICENSE file for details.

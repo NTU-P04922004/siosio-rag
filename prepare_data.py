@@ -193,7 +193,7 @@ def save_docs_to_jsonl(docs, file_path):
             f.write(doc.json() + "\n")
 
 
-def save_docs(out_path):
+def run(out_path):
     if not os.path.exists(out_path):
         os.makedirs(out_path)
 
@@ -215,4 +215,4 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--out_path", required=True)
     args = parser.parse_args()
-    save_docs(args.out_path)
+    run(args.out_path)

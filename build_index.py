@@ -33,7 +33,7 @@ def get_embeddings_model(device):
     return embedding_model
 
 
-def build_index(input_path, out_path, index_name):
+def run(input_path, out_path, index_name):
     docs_from_documentation = load_docs_from_jsonl(f"{input_path}/langchain_docs.json")
     docs_from_api = load_docs_from_jsonl(f"{input_path}/langchain_api_docs.json")
     docs_from_langsmith = load_docs_from_jsonl(
@@ -81,4 +81,4 @@ if __name__ == "__main__":
     parser.add_argument("--out_path", required=True)
     parser.add_argument("--index_name", default="Langsmith_docs_test")
     args = parser.parse_args()
-    build_index(args.input_path, args.out_path, args.index_name)
+    run(args.input_path, args.out_path, args.index_name)

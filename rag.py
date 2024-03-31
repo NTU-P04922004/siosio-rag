@@ -1,6 +1,7 @@
 import argparse
 from operator import itemgetter
 
+import pandas as pd
 import torch
 import weaviate
 from langchain.prompts import ChatPromptTemplate
@@ -8,8 +9,9 @@ from langchain.schema.output_parser import StrOutputParser
 from langchain.schema.runnable.passthrough import RunnableAssign
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Weaviate
-from langchain_google_genai import (ChatGoogleGenerativeAI)
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
+from tqdm import tqdm
 from weaviate.embedded import EmbeddedOptions
 
 
@@ -81,7 +83,7 @@ def format_docs(docs):
     return f"<documents>\n{formatted_str}\n</documents>"
 
 
-def run_rag(index_path, index_name, model_name, api_key, query, seed=42):
+def run(input_path, output_path, index_path, index_name, model_name, api_key, seed=42):
 
     llm_model = get_llm_model(model_name, api_key, seed=seed)
 
@@ -115,19 +117,32 @@ def run_rag(index_path, index_name, model_name, api_key, query, seed=42):
 
     chain = retrieve_chain | response_generator
 
-    prompt_with_context = retrieve_chain.invoke({"question": query})
-    response = chain.invoke(prompt_with_context)
-    print(response)
+    df = pd.read_csv(input_path)
+    data_dict_list = [{
+        'question': row['question'], 'ground_truth': row['answer']
+    } for _, row in df.iterrows()
+    ]
+
+    for data_dict in tqdm(data_dict_list):
+        prompt_with_context = retrieve_chain.invoke(
+            {'question': data_dict['question']})
+        response = chain.invoke(prompt_with_context)
+        data_dict['context'] = prompt_with_context['context']
+        data_dict['answer'] = response
+
+    result_df = pd.DataFrame(data_dict_list)
+    result_df.to_csv(f'{output_path}/pred_{model_name}.csv', index=False)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument("--input_path", required=True)
+    parser.add_argument("--output_path", required=True)
     parser.add_argument("--index_path", required=True)
     parser.add_argument("--index_name", required=True)
     parser.add_argument("--model_name", required=True)
     parser.add_argument("--api_key", required=True)
-    parser.add_argument("--query", required=True)
     args = parser.parse_args()
 
-    run_rag(args.index_path, args.index_name,
-            args.model_name, args.api_key, args.query)
+    run(args.input_path, args.output_path, args.index_path, args.index_name,
+        args.model_name, args.api_key)
