@@ -4,14 +4,13 @@ import re
 
 from bs4 import BeautifulSoup, Doctype, NavigableString, SoupStrainer, Tag
 from langchain.document_loaders import RecursiveUrlLoader, SitemapLoader
-from langchain.utils.html import (PREFIXES_TO_IGNORE_REGEX,
-                                  SUFFIXES_TO_IGNORE_REGEX)
+from langchain.utils.html import PREFIXES_TO_IGNORE_REGEX, SUFFIXES_TO_IGNORE_REGEX
 
 
 def langchain_docs_extractor(soup):
-    # Remove all the tags that are not meaningful for the extraction.
-    SCAPE_TAGS = ["nav", "footer", "aside", "script", "style"]
-    for tag in soup.find_all(SCAPE_TAGS):
+    # Remove irrelevant tags.
+    irrelevant_tags = ["nav", "footer", "aside", "script", "style"]
+    for tag in soup.find_all(irrelevant_tags):
         tag.decompose()
 
     def get_text(tag):
@@ -112,8 +111,10 @@ def langchain_docs_extractor(soup):
                 else:
                     yield from get_text(child)
 
-    joined = "".join(get_text(soup))
-    return re.sub(r"\n\n+", "\n\n", joined).strip()
+    extracted_text = "".join(get_text(soup))
+    # Remove excessive newlines.
+    extracted_text = re.sub(r"\n\n+", "\n\n", extracted_text).strip()
+    return extracted_text
 
 
 def metadata_extractor(meta, soup):
@@ -125,7 +126,7 @@ def metadata_extractor(meta, soup):
         "title": title.get_text() if title else "",
         "description": description.get("content", "") if description else "",
         "language": html.get("lang", "") if html else "",
-        **meta,
+        **meta
     }
 
 
@@ -140,7 +141,7 @@ def load_langchain_docs():
                 name=("article", "title", "html", "lang", "content")
             ),
         },
-        meta_function=metadata_extractor,
+        meta_function=metadata_extractor
     ).load()
 
 
@@ -157,7 +158,7 @@ def load_langsmith_docs():
             f"href=[\"']{PREFIXES_TO_IGNORE_REGEX}((?:{SUFFIXES_TO_IGNORE_REGEX}.)*?)"
             r"(?:[\#'\"]|\/[\#'\"])"
         ),
-        check_response_status=True,
+        check_response_status=True
     ).load()
 
 
@@ -182,8 +183,8 @@ def load_api_docs():
         check_response_status=True,
         exclude_dirs=(
             "https://api.python.langchain.com/en/latest/_sources",
-            "https://api.python.langchain.com/en/latest/_modules",
-        ),
+            "https://api.python.langchain.com/en/latest/_modules"
+        )
     ).load()
 
 
@@ -200,19 +201,16 @@ def run(out_path):
     docs_from_documentation = load_langchain_docs()
     print(
         f"Loaded {len(docs_from_documentation)} docs from documentation")
-    docs_from_api = load_api_docs()
-    print(f"Loaded {len(docs_from_api)} docs from API")
     docs_from_langsmith = load_langsmith_docs()
     print(f"Loaded {len(docs_from_langsmith)} docs from Langsmith")
 
     save_docs_to_jsonl(docs_from_documentation,
                        f"{out_path}/langchain_docs.json")
-    save_docs_to_jsonl(docs_from_api, f"{out_path}/langchain_api_docs.json")
     save_docs_to_jsonl(docs_from_langsmith, f"{out_path}/langsmith_docs.json")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--out_path", required=True)
+    parser.add_argument("--out_path", required=True, help="Directory to store preprocessed data.")
     args = parser.parse_args()
     run(args.out_path)

@@ -33,16 +33,15 @@ def get_embeddings_model(device):
     return embedding_model
 
 
-def run(input_path, out_path, index_name):
+def run(input_path, out_path, index_name, chunk_size, chunk_overlap):
     docs_from_documentation = load_docs_from_jsonl(f"{input_path}/langchain_docs.json")
-    docs_from_api = load_docs_from_jsonl(f"{input_path}/langchain_api_docs.json")
     docs_from_langsmith = load_docs_from_jsonl(
         f"{input_path}/langsmith_docs.json")
 
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=4000, chunk_overlap=200)
+        chunk_size=chunk_size, chunk_overlap=chunk_overlap)
     docs_transformed = text_splitter.split_documents(
-        docs_from_documentation + docs_from_api + docs_from_langsmith
+        docs_from_documentation + docs_from_langsmith
     )
     docs_transformed = [
         doc for doc in docs_transformed if len(doc.page_content) > 10]
@@ -77,8 +76,10 @@ def run(input_path, out_path, index_name):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--input_path", required=True)
-    parser.add_argument("--out_path", required=True)
-    parser.add_argument("--index_name", default="Langsmith_docs_test")
+    parser.add_argument("--input_path", required=True, help="Directory path that contains the resource doc.")
+    parser.add_argument("--out_path", required=True, help="Directory to store results.")
+    parser.add_argument("--index_name", default="Langsmith_docs_test", help="Index name for the vectorstore.")
+    parser.add_argument("--chunk_size", type=int, default=4000, help="Chunk size to split the input text.")
+    parser.add_argument("--chunk_overlap", type=int, default=200, help="Overlap size between text chunks.")
     args = parser.parse_args()
-    run(args.input_path, args.out_path, args.index_name)
+    run(args.input_path, args.out_path, args.index_name, args.chunk_size, args.chunk_overlap)

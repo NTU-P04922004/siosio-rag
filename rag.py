@@ -34,7 +34,7 @@ def get_llm_model(model_name, api_key, seed=42):
             convert_system_message_to_human=True
         )
     else:
-        raise ValueError("Unsupported model_id: {model_id}")
+        raise ValueError(f"Unsupported model_id: {model_name}")
     return model
 
 
@@ -72,12 +72,12 @@ def get_retriever(index_path, index_name, embedding_model, top_k=3):
 def format_docs(docs):
     formatted_docs = []
     for i, doc in enumerate(docs):
-        doc_string = (
-            f"<document index='{i}'>\n"
-            f"<source>{doc.metadata.get('source')}</source>\n"
-            f"<doc_content>{doc.page_content}</doc_content>\n"
-            "</document>"
-        )
+        doc_string = f"""
+        <document index='{i}'>
+        <source>{doc.metadata.get('source')}</source>
+        <doc_content>{doc.page_content}</doc_content>
+        </document>
+        """
         formatted_docs.append(doc_string)
     formatted_str = "\n".join(formatted_docs)
     return f"<documents>\n{formatted_str}\n</documents>"
@@ -119,29 +119,29 @@ def run(input_path, output_path, index_path, index_name, model_name, api_key, se
 
     df = pd.read_csv(input_path)
     data_dict_list = [{
-        'question': row['question'], 'ground_truth': row['answer']
+        "question": row["question"], "ground_truth": row["answer"]
     } for _, row in df.iterrows()
     ]
 
     for data_dict in tqdm(data_dict_list):
         prompt_with_context = retrieve_chain.invoke(
-            {'question': data_dict['question']})
+            {"question": data_dict["question"]})
         response = chain.invoke(prompt_with_context)
-        data_dict['context'] = prompt_with_context['context']
-        data_dict['answer'] = response
+        data_dict["context"] = prompt_with_context["context"]
+        data_dict["answer"] = response
 
     result_df = pd.DataFrame(data_dict_list)
-    result_df.to_csv(f'{output_path}/pred_{model_name}.csv', index=False)
+    result_df.to_csv(f"{output_path}/pred_{model_name}.csv", index=False)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--input_path", required=True)
-    parser.add_argument("--output_path", required=True)
-    parser.add_argument("--index_path", required=True)
-    parser.add_argument("--index_name", required=True)
-    parser.add_argument("--model_name", required=True)
-    parser.add_argument("--api_key", required=True)
+    parser.add_argument("--input_path", required=True, help="Path to the input CSV file.")
+    parser.add_argument("--output_path", required=True, help="Directory to store results.")
+    parser.add_argument("--index_path", required=True, help="Path to the vectorstore directory.")
+    parser.add_argument("--index_name", required=True, help="Name for the vectorstore index.")
+    parser.add_argument("--model_name", required=True, help='LLM model name. (e.g., "gpt-3.5-turbo" or "gemini-1.0-pro-001").')
+    parser.add_argument("--api_key", required=True, help="API key for the LLM.")
     args = parser.parse_args()
 
     run(args.input_path, args.output_path, args.index_path, args.index_name,
