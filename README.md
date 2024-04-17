@@ -73,5 +73,14 @@ python evaluate.py \
     --api_key api_key_for_llm
 ```
 
+## Results
+
+![alt text](assets/llm.png)
+
+**Note**:
+1. Data used in the experiment can be found [here](https://drive.google.com/file/d/1-1323eYPg5YxKgyrX9vNPRniJeWPbYs7/view?usp=sharing).
+2. The results were obtained with `Ragas` v1.7.
+3. For information about the metrics, please refer to this [doc](https://docs.ragas.io/en/stable/concepts/metrics/index.html).
+
 ## License
 This project is licensed under the MIT license. Please refer to the LICENSE file for details.
